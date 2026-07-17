@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muhammad Fahri Hakim — Penetration Tester</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #090d0c;
+    --bg-raised: #0f1613;
+    --line: #1c2b26;
+    --green: #3dffa0;
+    --green-dim: #1f8a5c;
+    --red: #ff4462;
+    --text: #dfeae4;
+    --text-muted: #7c9089;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    overflow-x:hidden;
+    position:relative;
+  }
+  /* subtle scanline / CRT overlay */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(
+      0deg, rgba(61,255,160,0.015) 0px, rgba(61,255,160,0.015) 1px,
+      transparent 1px, transparent 3px
+    );
+    pointer-events:none;
+    z-index:999;
+  }
+  ::selection{ background:var(--green); color:#04140c; }
+
+  a{color:inherit;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0;
+    z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 5vw;
+    background:rgba(9,13,12,0.85);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--line);
+    font-family:var(--mono);
+    font-size:13px;
+  }
+  nav .logo{ color:var(--green); font-weight:700; letter-spacing:0.5px; }
+  nav .logo span{ color:var(--text-muted); }
+  nav ul{ list-style:none; display:flex; gap:28px; }
+  nav ul a{ text-decoration:none; color:var(--text-muted); transition:color .2s; }
+  nav ul a:hover{ color:var(--green); }
+  nav .status{ display:flex; align-items:center; gap:8px; color:var(--text-muted); }
+  nav .dot{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 2s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  @media (max-width:720px){ nav ul{display:none;} }
+
+  section{ padding:110px 5vw 70px; max-width:1100px; margin:0 auto; position:relative; }
+
+  /* section index label */
+  .idx{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--green-dim);
+    letter-spacing:2px;
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:24px;
+  }
+  .idx::after{ content:""; flex:1; height:1px; background:var(--line); }
+
+  /* ---------- HERO ---------- */
+  #hero{ padding-top:150px; min-height:92vh; display:flex; flex-direction:column; justify-content:center; }
+  .terminal{
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    border-radius:8px;
+    max-width:680px;
+    box-shadow:0 0 0 1px rgba(61,255,160,0.04), 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .terminal-bar{
+    display:flex; align-items:center; gap:8px;
+    padding:10px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  .terminal-bar .tdot{ width:10px; height:10px; border-radius:50%; }
+  .terminal-bar span:nth-child(1){ background:#ff5f57; }
+  .terminal-bar span:nth-child(2){ background:#febc2e; }
+  .terminal-bar span:nth-child(3){ background:#28c840; }
+  .terminal-bar .path{ margin-left:12px; font-family:var(--mono); font-size:11px; color:var(--text-muted); }
+  .terminal-body{
+    padding:20px 22px 26px;
+    font-family:var(--mono);
+    font-size:14px;
+    min-height:210px;
+  }
+  .terminal-body .row{ display:flex; gap:8px; margin-bottom:6px; }
+  .terminal-body .prompt{ color:var(--green); }
+  .terminal-body .cmd{ color:var(--text); border-right:2px solid var(--green); white-space:nowrap; overflow:hidden; width:0; animation:type 1.1s steps(20) forwards, blink .8s step-end infinite; }
+  .terminal-body .out{ color:var(--text-muted); opacity:0; animation:fadeIn .4s ease forwards; }
+  #out1{ animation-delay:1.2s; }
+  #out2{ animation-delay:1.5s; }
+  #out3{ animation-delay:1.8s; }
+  #out4{ animation-delay:2.1s; }
+  #cmd2{ width:0; animation:type 1.4s steps(28) 2.6s forwards; border-right:2px solid var(--green); white-space:nowrap; overflow:hidden; }
+  #out5{ opacity:0; animation:fadeIn .4s ease 4.1s forwards; color:var(--green); font-weight:700; }
+  @keyframes type{ to{ width:100%; } }
+  @keyframes blink{ 50%{ border-color:transparent; } }
+  @keyframes fadeIn{ to{opacity:1;} }
+
+  .hero-tag{
+    font-family:var(--mono); font-size:12px; color:var(--red);
+    letter-spacing:3px; margin:34px 0 14px;
+  }
+  h1.hero-title{
+    font-family:var(--mono); font-weight:800; font-size:clamp(32px,5.5vw,58px);
+    line-height:1.1; margin-bottom:16px;
+  }
+  h1.hero-title .accent{ color:var(--green); }
+  .hero-sub{ max-width:560px; color:var(--text-muted); font-size:16px; margin-bottom:30px; }
+  .btn-row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--mono); font-size:13px; padding:12px 22px;
+    border-radius:5px; text-decoration:none; letter-spacing:0.5px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary{ background:var(--green); color:#04140c; font-weight:700; }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 8px 24px rgba(61,255,160,0.25); }
+  .btn-ghost{ border:1px solid var(--line); color:var(--text); }
+  .btn-ghost:hover{ border-color:var(--green-dim); color:var(--green); }
+
+  /* ---------- ABOUT ---------- */
+  .about-grid{ display:grid; grid-template-columns:1.3fr 1fr; gap:50px; align-items:start; }
+  @media (max-width:800px){ .about-grid{ grid-template-columns:1fr; } }
+  .about-grid p{ color:var(--text-muted); margin-bottom:16px; font-size:15.5px; }
+  .about-grid strong{ color:var(--text); font-weight:600; }
+  .meta-box{
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:8px; padding:22px;
+    font-family:var(--mono); font-size:13px;
+  }
+  .meta-box .field{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--line); }
+  .meta-box .field:last-child{ border-bottom:none; }
+  .meta-box .k{ color:var(--text-muted); }
+  .meta-box .v{ color:var(--green); text-align:right; }
+
+  /* ---------- SKILLS ---------- */
+  .skill-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
+  .skill-card{
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:8px; padding:22px;
+    transition:border-color .2s ease, transform .2s ease;
+  }
+  .skill-card:hover{ border-color:var(--green-dim); transform:translateY(-3px); }
+  .skill-card .sc-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .skill-card .sc-title{ font-family:var(--mono); font-weight:700; font-size:14.5px; }
+  .skill-card .sc-lvl{ font-family:var(--mono); font-size:11px; color:var(--green); border:1px solid var(--green-dim); padding:2px 8px; border-radius:20px; }
+  .skill-card ul{ list-style:none; }
+  .skill-card li{ font-size:13.5px; color:var(--text-muted); padding:4px 0; }
+  .skill-card li::before{ content:"› "; color:var(--green-dim); }
+
+  /* ---------- CERTS ---------- */
+  .cert-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
+  .cert-card{
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:8px; overflow:hidden;
+  }
+  .cert-head{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 18px; border-bottom:1px solid var(--line);
+    font-family:var(--mono); font-size:11px; color:var(--text-muted);
+  }
+  .cert-head .verified{ color:var(--green); display:flex; align-items:center; gap:6px; }
+  .cert-head .verified::before{ content:"✓"; }
+  .cert-body{ padding:20px 18px; }
+  .cert-body h3{ font-family:var(--mono); font-size:16px; margin-bottom:6px; }
+  .cert-body p{ color:var(--text-muted); font-size:13.5px; }
+  .cert-body .issuer{ color:var(--green); font-family:var(--mono); font-size:12px; margin-top:10px; display:block; }
+  .cert-thumb{
+    position:relative; cursor:pointer; overflow:hidden;
+    border-bottom:1px solid var(--line);
+    aspect-ratio: 16/9.4;
+    background:#000;
+  }
+  .cert-thumb img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .35s ease, filter .35s ease; filter:brightness(0.9); }
+  .cert-thumb:hover img{ transform:scale(1.045); filter:brightness(1); }
+  .cert-thumb::after{
+    content:"⤢  lihat sertifikat";
+    position:absolute; right:10px; bottom:10px;
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.5px;
+    color:var(--text); background:rgba(9,13,12,0.72);
+    border:1px solid var(--line); padding:5px 10px; border-radius:20px;
+    opacity:0; transform:translateY(4px);
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .cert-thumb:hover::after{ opacity:1; transform:translateY(0); }
+
+  /* lightbox */
+  .lightbox{
+    position:fixed; inset:0; z-index:1000;
+    background:rgba(4,6,5,0.92);
+    display:none; align-items:center; justify-content:center;
+    padding:5vw;
+    backdrop-filter: blur(4px);
+  }
+  .lightbox.open{ display:flex; }
+  .lightbox img{
+    max-width:min(900px,90vw); max-height:85vh;
+    border-radius:8px; border:1px solid var(--line);
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  }
+  .lightbox .lb-close{
+    position:absolute; top:24px; right:5vw;
+    font-family:var(--mono); font-size:13px; color:var(--text);
+    background:var(--bg-raised); border:1px solid var(--line);
+    padding:8px 16px; border-radius:20px; cursor:pointer;
+  }
+  .lightbox .lb-close:hover{ border-color:var(--green-dim); color:var(--green); }
+
+  /* ---------- CASE STUDY ---------- */
+  .log{
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:8px; padding:26px 26px;
+    font-family:var(--mono);
+  }
+  .log .line{ display:flex; gap:16px; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .log .line:last-child{ border-bottom:none; }
+  .log .ts{ color:var(--text-muted); white-space:nowrap; }
+  .log .lvl{ font-weight:700; white-space:nowrap; }
+  .log .lvl.info{ color:var(--green); }
+  .log .lvl.warn{ color:var(--red); }
+  .log .msg{ color:var(--text); }
+  .case-note{ margin-top:20px; color:var(--text-muted); font-size:14.5px; max-width:700px; }
+
+  /* ---------- CONTACT ---------- */
+  #contact{ padding-bottom:130px; }
+  .contact-wrap{
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:8px;
+    padding:40px; display:grid; grid-template-columns:1fr 1fr; gap:40px;
+  }
+  @media (max-width:800px){ .contact-wrap{ grid-template-columns:1fr; } }
+  .contact-wrap h2{ font-family:var(--mono); font-size:24px; margin-bottom:12px; }
+  .contact-wrap p{ color:var(--text-muted); font-size:14.5px; margin-bottom:20px; }
+  .contact-links a{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--mono); font-size:13.5px; text-decoration:none;
+    color:var(--text); padding:10px 0; border-bottom:1px solid var(--line);
+  }
+  .contact-links a:hover{ color:var(--green); }
+  .contact-links a .k{ color:var(--green-dim); width:80px; display:inline-block; }
+  form{ display:flex; flex-direction:column; gap:14px; }
+  form label{ font-family:var(--mono); font-size:11px; color:var(--text-muted); letter-spacing:1px; }
+  form input, form textarea{
+    background:var(--bg); border:1px solid var(--line); border-radius:5px;
+    color:var(--text); font-family:var(--sans); font-size:14px; padding:11px 12px;
+    outline:none; transition:border-color .2s;
+  }
+  form input:focus, form textarea:focus{ border-color:var(--green-dim); }
+  form textarea{ resize:vertical; min-height:90px; }
+  form button{
+    font-family:var(--mono); font-weight:700; background:var(--green); color:#04140c;
+    border:none; border-radius:5px; padding:12px; cursor:pointer; font-size:13px; letter-spacing:0.5px;
+  }
+  form button:hover{ box-shadow:0 8px 24px rgba(61,255,160,0.25); }
+
+  footer{
+    border-top:1px solid var(--line); padding:26px 5vw; text-align:center;
+    font-family:var(--mono); font-size:12px; color:var(--text-muted);
+  }
+  footer .accent{ color:var(--green); }
+
+  h2.section-title{ font-family:var(--mono); font-size:clamp(22px,3vw,32px); margin-bottom:36px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">MFH<span>@secure</span>~$</div>
+  <ul>
+    <li><a href="#about">about</a></li>
+    <li><a href="#skills">skills</a></li>
+    <li><a href="#certs">certs</a></li>
+    <li><a href="#case">case-study</a></li>
+    <li><a href="#contact">contact</a></li>
+  </ul>
+  <div class="status"><span class="dot"></span> online</div>
+</nav>
+
+<section id="hero">
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="tdot"></span><span class="tdot"></span><span class="tdot"></span>
+      <span class="path">mfh@secure: ~</span>
+    </div>
+    <div class="terminal-body">
+      <div class="row"><span class="prompt">$</span><span class="cmd" id="cmd1">whoami</span></div>
+      <div class="row out" id="out1">&gt; Muhammad Fahri Hakim</div>
+      <div class="row out" id="out2">&gt; Penetration Tester / Ethical Hacker</div>
+      <div class="row out" id="out3">&gt; SMA Negeri 01 OKU</div>
+      <div class="row out" id="out4" style="margin-bottom:14px;">&gt; status: actively hunting bugs</div>
+      <div class="row"><span class="prompt">$</span><span class="cmd" id="cmd2">cat certifications.txt | grep VERIFIED</span></div>
+      <div class="row out" id="out5">&gt; 4 hasil ditemukan. lihat di bawah ↓</div>
+    </div>
+  </div>
+
+  <div class="hero-tag">// RED TEAM · APPSEC · API SECURITY</div>
+  <h1 class="hero-title">Mengamankan sistem<br>dengan cara berpikir <span class="accent">seperti penyerang.</span></h1>
+  <p class="hero-sub">Saya Fahri, penetration tester yang fokus pada web application dan API security — menemukan celah sebelum orang yang salah menemukannya lebih dulu.</p>
+  <div class="btn-row">
+    <a href="#certs" class="btn btn-primary">Lihat Sertifikasi</a>
+    <a href="#contact" class="btn btn-ghost">Hubungi Saya</a>
+  </div>
+</section>
+
+<section id="about">
+  <div class="idx">01 / ABOUT</div>
+  <h2 class="section-title">Tentang Saya</h2>
+  <div class="about-grid">
+    <div>
+      <p>Saya adalah pelajar di <strong>SMA Negeri 01 OKU</strong> yang menekuni dunia <strong>cyber security</strong>, dengan fokus utama pada <strong>penetration testing</strong> dan <strong>ethical hacking</strong>. Ketertarikan saya bermula dari rasa penasaran terhadap cara kerja sistem — dan berkembang menjadi kebiasaan membedah aplikasi web serta API untuk mencari celah keamanan sebelum bisa disalahgunakan.</p>
+      <p>Pendekatan saya berpijak pada metodologi red team: reconnaissance yang teliti, pengujian yang sistematis, dan pelaporan yang jelas agar temuan benar-benar bisa ditindaklanjuti — bukan sekadar daftar kerentanan.</p>
+      <p>Di luar pengujian teknis, saya aktif mengikuti program keamanan siber tingkat nasional dan program bug bounty pemerintah daerah, sebagai bentuk kontribusi nyata terhadap keamanan digital Indonesia.</p>
+    </div>
+    <div class="meta-box">
+      <div class="field"><span class="k">role</span><span class="v">Penetration Tester</span></div>
+      <div class="field"><span class="k">focus</span><span class="v">Web & API Security</span></div>
+      <div class="field"><span class="k">school</span><span class="v">SMA N 01 OKU</span></div>
+      <div class="field"><span class="k">certs</span><span class="v">CRTA · API-RTA</span></div>
+      <div class="field"><span class="k">recognition</span><span class="v">BSSN · Pemprov Bali</span></div>
+      <div class="field"><span class="k">status</span><span class="v" style="color:var(--green)">available</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="idx">02 / SKILLS</div>
+  <h2 class="section-title">Keahlian</h2>
+  <div class="skill-grid">
+    <div class="skill-card">
+      <div class="sc-head"><span class="sc-title">Reconnaissance</span><span class="sc-lvl">advanced</span></div>
+      <ul>
+        <li>OSINT & footprinting</li>
+        <li>Subdomain & asset enumeration</li>
+        <li>Service & version fingerprinting</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="sc-head"><span class="sc-title">Web App Security</span><span class="sc-lvl">advanced</span></div>
+      <ul>
+        <li>OWASP Top 10 assessment</li>
+        <li>Business logic testing</li>
+        <li>Authentication & session flaws</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="sc-head"><span class="sc-title">API Security</span><span class="sc-lvl">advanced</span></div>
+      <ul>
+        <li>REST & GraphQL testing</li>
+        <li>Broken object-level authorization</li>
+        <li>Rate-limit & abuse case review</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="sc-head"><span class="sc-title">Red Team Ops</span><span class="sc-lvl">intermediate</span></div>
+      <ul>
+        <li>Attack path analysis</li>
+        <li>Scenario-based simulation</li>
+        <li>Post-engagement reporting</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="sc-head"><span class="sc-title">Reporting</span><span class="sc-lvl">advanced</span></div>
+      <ul>
+        <li>Risk-based severity rating</li>
+        <li>Bukti temuan yang terstruktur</li>
+        <li>Rekomendasi remediasi praktis</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="sc-head"><span class="sc-title">Tools</span><span class="sc-lvl">daily use</span></div>
+      <ul>
+        <li>Burp Suite, Nmap</li>
+        <li>Postman / API test clients</li>
+        <li>Custom recon scripting</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="certs">
+  <div class="idx">03 / CERTIFICATIONS</div>
+  <h2 class="section-title">Sertifikasi & Penghargaan</h2>
+  <div class="cert-grid">
+    <div class="cert-card">
+      <div class="cert-thumb" onclick="openLightbox('assets/cert-crta.png')">
+        <img src="https://cdn.phototourl.com/member/2026-07-17-732aeee6-09f3-4b17-9874-68d80e77fa14.png" alt="Sertifikat CRTA - Muhammad Fahri Hakim" loading="lazy">
+      </div>
+      <div class="cert-head"><span>CERT_ID · CRTA</span><span class="verified">verified</span></div>
+      <div class="cert-body">
+        <h3>Certified Red Team Analyst (CRTA)</h3>
+        <p>Sertifikasi yang menguji kemampuan simulasi serangan red team secara end-to-end, dari reconnaissance hingga pelaporan.</p>
+        <span class="issuer">CyberWarfare Labs</span>
+      </div>
+    </div>
+    <div class="cert-card">
+      <div class="cert-thumb" onclick="openLightbox('assets/cert-api-rta.png')">
+        <img src="https://cdn.phototourl.com/member/2026-07-17-a58d13c4-efb2-4141-a786-633d1234b49f.png" alt="Sertifikat API-RTA - Muhammad Fahri Hakim" loading="lazy">
+      </div>
+      <div class="cert-head"><span>CERT_ID · API-RTA</span><span class="verified">verified</span></div>
+      <div class="cert-body">
+        <h3>Certified API Red Team Analyst</h3>
+        <p>Fokus pada pengujian keamanan API modern — otorisasi, otentikasi, dan skenario penyalahgunaan endpoint.</p>
+        <span class="issuer">CyberWarfare Labs</span>
+      </div>
+    </div>
+    <div class="cert-card">
+      <div class="cert-thumb" onclick="openLightbox('assets/cert-bssn.png')">
+        <img src="https://cdn.phototourl.com/member/2026-07-17-ab82c0e4-6974-4ce9-9656-2a1860194229.png" alt="Sertifikat Apresiasi BSSN - Muhammad Fahri Hakim" loading="lazy">
+      </div>
+      <div class="cert-head"><span>AWARD · VVIP 2026</span><span class="verified">verified</span></div>
+      <div class="cert-body">
+        <h3>Certificate of Appreciation</h3>
+        <p>Penghargaan atas partisipasi dalam program keamanan siber VVIP Jawa Tengah 2026.</p>
+        <span class="issuer">BSSN (Badan Siber dan Sandi Negara)</span>
+      </div>
+    </div>
+    <div class="cert-card">
+      <div class="cert-thumb" onclick="openLightbox('assets/cert-bali.png')">
+        <img src="https://cdn.phototourl.com/member/2026-07-17-bf1ffaca-5d7e-4bc0-976c-dd537e9ab936.png" alt="Sertifikat Apresiasi Pemerintah Provinsi Bali - Muhammad Fahri Hakim" loading="lazy">
+      </div>
+      <div class="cert-head"><span>AWARD · BUG BOUNTY</span><span class="verified">verified</span></div>
+      <div class="cert-body">
+        <h3>Certificate of Appreciation</h3>
+        <p>Penghargaan atas temuan kerentanan Reflected XSS pada portal Bali Satu Data melalui program bug bounty resmi.</p>
+        <span class="issuer">Pemerintah Provinsi Bali</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="case">
+  <div class="idx">04 / CASE STUDY</div>
+  <h2 class="section-title">Temuan: Bali Satu Data</h2>
+  <div class="log">
+    <div class="line"><span class="ts">[00:00]</span><span class="lvl info">INFO</span><span class="msg">Memulai pengujian pada portal publik Bali Satu Data sebagai bagian program bug bounty resmi.</span></div>
+    <div class="line"><span class="ts">[00:14]</span><span class="lvl info">INFO</span><span class="msg">Melakukan pemetaan input yang direfleksikan kembali ke halaman tanpa sanitasi memadai.</span></div>
+    <div class="line"><span class="ts">[00:27]</span><span class="lvl warn">FOUND</span><span class="msg">Kerentanan Reflected XSS terkonfirmasi pada salah satu parameter input publik.</span></div>
+    <div class="line"><span class="ts">[00:31]</span><span class="lvl info">INFO</span><span class="msg">Menyusun laporan berisi bukti, dampak, dan rekomendasi mitigasi, lalu melaporkan secara bertanggung jawab.</span></div>
+    <div class="line"><span class="ts">[00:45]</span><span class="lvl info">INFO</span><span class="msg">Laporan diverifikasi oleh pihak Pemerintah Provinsi Bali dan diapresiasi secara resmi.</span></div>
+  </div>
+  <p class="case-note">Detail teknis eksploitasi sengaja tidak dipublikasikan mengikuti prinsip <em>responsible disclosure</em>. Yang ditampilkan di sini adalah alur kerja dan hasil kontribusinya.</p>
+</section>
+
+<section id="contact">
+  <div class="idx">05 / CONTACT</div>
+  <h2 class="section-title">Hubungi Saya</h2>
+  <div class="contact-wrap">
+    <div>
+      <h2>Punya sistem yang ingin diuji?</h2>
+      <p>Terbuka untuk kolaborasi penetration testing, program bug bounty, atau sekadar diskusi seputar keamanan siber.</p>
+      <div class="contact-links">
+        <a href="mailto:hakimfahri97@gmail.com"><span class="k">email</span> hakimfahri97@gmail.com</a>
+        <a href="#"><span class="k">github</span> github.com/Hakim-Cybersec</a>
+        <a href="#"><span class="k">linkedin</span> linkedin.com/in/fahrihakim</a>
+      </div>
+    </div>
+    <form onsubmit="event.preventDefault(); this.querySelector('button').textContent='Terkirim ✓';">
+      <div>
+        <label>NAMA</label>
+        <input type="text" placeholder="Nama Anda" required>
+      </div>
+      <div>
+        <label>EMAIL</label>
+        <input type="email" placeholder="email@domain.com" required>
+      </div>
+      <div>
+        <label>PESAN</label>
+        <textarea placeholder="Tulis pesan Anda..." required></textarea>
+      </div>
+      <button type="submit">Kirim Pesan</button>
+    </form>
+  </div>
+</section>
+
+<footer>
+  &gt; end of file <span class="accent">/portfolio/fahri.html</span> — © 2026 Muhammad Fahri Hakim
+</footer>
+
+<div class="lightbox" id="lightbox" onclick="if(event.target===this) closeLightbox()">
+  <div class="lb-close" onclick="closeLightbox()">✕ tutup</div>
+  <img id="lightbox-img" src="" alt="Sertifikat">
+</div>
+
+<script>
+  function openLightbox(src){
+    const lb = document.getElementById('lightbox');
+    document.getElementById('lightbox-img').src = src;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(){
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeLightbox(); });
+</script>
+
+</body>
+</html>
