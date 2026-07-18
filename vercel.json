@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/portofolio-fahri-hakim (1).html"
+      "destination": "/index.html"
     }
   ]
 }
