@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://porto-hakim.vercel.app/sitemap.xml
